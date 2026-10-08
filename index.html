@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="nl" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kunst Academie & Kunst Avontuur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Bos Achtergrond voor het Spel */
+        .forest-arena {
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(20, 83, 45, 0.8)),
+                        radial-gradient(circle at 50% 20%, rgba(34, 197, 94, 0.25), transparent 70%),
+                        linear-gradient(to bottom, #0f172a, #14532d, #064e3b);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Bomen SVG Siliconen Effect op Achtergrond */
+        .forest-trees {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cpath fill='%23064e3b' fill-opacity='0.5' d='M0 400 L0 250 L40 300 L80 200 L120 280 L160 180 L200 320 L240 220 L280 300 L320 150 L360 270 L400 200 L440 310 L480 190 L520 290 L560 160 L600 300 L640 210 L680 320 L720 170 L760 280 L800 220 L840 330 L880 180 L920 290 L960 160 L1000 310 L1040 200 L1080 300 L1120 180 L1160 270 L1200 220 L1200 400 Z'/%3E%3Cpath fill='%23022c22' fill-opacity='0.8' d='M0 400 L0 290 L50 330 L100 240 L150 310 L200 210 L250 340 L300 250 L350 320 L400 180 L450 300 L500 220 L550 330 L600 200 L650 320 L700 230 L750 340 L800 210 L850 310 L900 220 L950 320 L1000 200 L1050 330 L1100 240 L1150 310 L1200 260 L1200 400 Z'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        .nav-tab.active {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Custom Scrollbar voor Combat Log */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        /* Animatie effecten voor gevecht */
+        @keyframes hitShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .animate-hit {
+            animation: hitShake 0.4s ease-in-out;
+        }
+
+        .shield-glow {
+            box-shadow: 0 0 25px 8px rgba(59, 130, 246, 0.6);
+            border-color: #60a5fa !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
+                    🎨
+                </div>
+                <div>
+                    <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Kunst Academie</span>
+                    <span class="block text-xs text-slate-400 font-medium">Interactief Leer- & Spelplatform</span>
+                </div>
+            </div>
+
+            <!-- Tabs: Leren & Spel -->
+            <div class="flex items-center space-x-2 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60">
+                <button onclick="switchTab('leren')" id="tab-btn-leren" class="nav-tab active px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2">
+                    <span>📖 Leren</span>
+                </button>
+                <button onclick="switchTab('spel')" id="tab-btn-spel" class="nav-tab text-slate-300 hover:text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2">
+                    <span>⚔️ Spel</span>
+                    <span id="nav-points-badge" class="bg-amber-400 text-slate-900 text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm">0 pt</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Message Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- SCHERM 1: LEREN (Volledig hersteld met alle originele onderdelen) -->
+    <div id="screen-leren" class="flex-grow flex flex-col">
+        
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800/80 to-slate-900 py-12 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
+                            ✨ Ontdek de Kunstenaar in Jezelf
+                        </span>
+                        <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                            Leer Schilderen, Tekenen & Kunstgeschiedenis
+                        </h1>
+                        <p class="mt-4 text-lg text-slate-300 leading-relaxed">
+                            Doorloop onze interactieve lessen, oefen in de digitale tekenstudio en test je kennis. Verdien punten die je direct kunt inzetten in het Kunst Avontuur Spel!
+                        </p>
+                        
+                        <!-- Points Counter Banner -->
+                        <div class="mt-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-2xl">
+                                    ⭐
+                                </div>
+                                <div>
+                                    <div class="text-xs uppercase tracking-wider text-amber-400 font-bold">Jouw Actiepunten Balans</div>
+                                    <div class="text-2xl font-black text-amber-300"><span id="leren-points-display">0</span> Punten</div>
+                                </div>
+                            </div>
+                            <button onclick="switchTab('spel')" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-sm transition-colors shadow-lg shadow-amber-400/20">
+                                Naar Spel ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-emerald-400">12+</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Interactieve Cursussen</div>
+                        </div>
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-teal-400">0.5 - 1.0</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Punten Per Oefening</div>
+                        </div>
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-cyan-400">100%</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Praktische Studio</div>
+                        </div>
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-amber-400">Officieel</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Certificaat Behalen</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cursus & Leermodules Sectie -->
+        <section class="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">Beschikbare Leermodules</h2>
+                    <p class="text-slate-400 mt-1">Kies een onderdeel om theorie te lezen, een tekenopdracht in te leveren of de quiz te maken.</p>
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="flex flex-wrap gap-2" id="category-filters">
+                    <button onclick="filterCategory('all')" class="cat-filter active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 text-white transition-all">Alles</button>
+                    <button onclick="filterCategory('schilderen')" class="cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Schilderen</button>
+                    <button onclick="filterCategory('tekenen')" class="cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Tekenen</button>
+                    <button onclick="filterCategory('historie')" class="cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Kunsthistorie</button>
+                </div>
+            </div>
+
+            <!-- Cards Container -->
+            <div id="courses-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic courses inserted here via JS -->
+            </div>
+        </section>
+
+        <!-- Interactive Workspace Modal/Container -->
+        <div id="workspace-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                
+                <!-- Workspace Header -->
+                <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+                    <div>
+                        <span id="workspace-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Module</span>
+                        <h3 id="workspace-title" class="text-2xl font-bold text-white mt-1">Titel Les</h3>
+                    </div>
+                    <button onclick="closeWorkspace()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xl transition-colors">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Navigation Sub-Tabs -->
+                <div class="flex border-b border-slate-800 bg-slate-950/40 px-6 pt-2 gap-4">
+                    <button onclick="switchWorkspaceSubTab('theorie')" id="subtab-theorie" class="py-3 px-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400 transition-colors">
+                        📖 Theorie (+0.5 pt)
+                    </button>
+                    <button onclick="switchWorkspaceSubTab('tekenen')" id="subtab-tekenen" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+                        🖌️ Tekenstudio (+0.5 pt)
+                    </button>
+                    <button onclick="switchWorkspaceSubTab('quiz')" id="subtab-quiz" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+                        ❓ Quiz (+1.0 pt per vraag)
+                    </button>
+                </div>
+
+                <!-- Workspace Body -->
+                <div class="p-6 overflow-y-auto flex-grow space-y-6">
+                    
+                    <!-- 1. Theorie Content -->
+                    <div id="ws-content-theorie" class="space-y-4 text-slate-300 leading-relaxed">
+                        <div id="theorie-text" class="prose prose-invert max-w-none">
+                            <!-- Ingested dynamically -->
+                        </div>
+                        <div class="pt-6 border-t border-slate-800 flex justify-between items-center">
+                            <span id="theorie-status-msg" class="text-xs text-slate-400">Lees de theorie aandachtig door.</span>
+                            <button id="btn-complete-theorie" onclick="completeTheorie()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                                Markeer als Gelezen (+0.5 pt)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Tekenstudio Content -->
+                    <div id="ws-content-tekenen" class="hidden space-y-4">
+                        <p id="teken-instructions" class="text-slate-300 text-sm bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+                            Opdracht instructies komen hier...
+                        </p>
+
+                        <!-- Canvas Controls -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400">Kleur:</span>
+                                <button onclick="setCanvasColor('#000000')" class="w-7 h-7 rounded-full bg-black border border-slate-600 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#ef4444')" class="w-7 h-7 rounded-full bg-red-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#3b82f6')" class="w-7 h-7 rounded-full bg-blue-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#eab308')" class="w-7 h-7 rounded-full bg-yellow-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#22c55e')" class="w-7 h-7 rounded-full bg-green-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <input type="color" id="colorPicker" value="#000000" class="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0">
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400">Dikte:</span>
+                                <button onclick="setBrushSize(2)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Fijn</button>
+                                <button onclick="setBrushSize(6)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Middel</button>
+                                <button onclick="setBrushSize(14)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Dik</button>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearCanvas()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-red-400 font-semibold border border-red-500/20">
+                                    🗑️ Wis
+                                </button>
+                                <button onclick="downloadCanvas()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">
+                                    💾 Opslaan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Box -->
+                        <div class="w-full bg-white rounded-2xl overflow-hidden border-2 border-slate-700 flex justify-center">
+                            <canvas id="studioCanvas" width="700" height="400" class="w-full max-w-full touch-none cursor-crosshair bg-white"></canvas>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                            <span id="tekenen-status-msg" class="text-xs text-slate-400">Maak je tekening en lever hem in voor punten.</span>
+                            <button id="btn-complete-tekenen" onclick="completeTekenen()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                                Tekening Inleveren (+0.5 pt)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Quiz Content -->
+                    <div id="ws-content-quiz" class="hidden space-y-6">
+                        <div id="quiz-questions-list" class="space-y-6">
+                            <!-- Dynamic questions with shuffled options -->
+                        </div>
+
+                        <!-- Detailed Feedback View -->
+                        <div id="quiz-feedback-box" class="hidden p-5 rounded-2xl border space-y-3">
+                            <div id="quiz-feedback-title" class="font-bold text-lg"></div>
+                            <div id="quiz-feedback-body" class="text-sm"></div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Scoor minimaal 4/5 vragen goed om de module af te ronden!</span>
+                            <div class="flex gap-3">
+                                <button id="btn-check-quiz" onclick="checkQuiz()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                                    Quiz Nakijken
+                                </button>
+                                <button id="btn-retry-quiz" onclick="retryQuiz()" class="hidden px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-amber-500/20">
+                                    Opnieuw Proberen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Kunst Galerie -->
+        <section class="py-12 bg-slate-900/60 border-t border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Inspirerende Kunstgalerie</h2>
+                <p class="text-slate-400 mb-8">Bekijk bekende meesterwerken en ontdek hun stijl en stroming.</p>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-amber-700 via-orange-600 to-yellow-500 flex items-center justify-center text-5xl">
+                            🌻
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-amber-400 uppercase">Post-Impressionisme</span>
+                            <h3 class="font-bold text-white text-lg mt-1">Zonnebloemen</h3>
+                            <p class="text-slate-400 text-xs mt-1">Vincent van Gogh (1889)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-blue-900 via-indigo-800 to-slate-700 flex items-center justify-center text-5xl">
+                            🌌
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-blue-400 uppercase">Expressionisme</span>
+                            <h3 class="font-bold text-white text-lg mt-1">De Sterrennacht</h3>
+                            <p class="text-slate-400 text-xs mt-1">Vincent van Gogh (1889)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-teal-800 via-emerald-700 to-cyan-600 flex items-center justify-center text-5xl">
+                            🌊
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-cyan-400 uppercase">Impressionisme</span>
+                            <h3 class="font-bold text-white text-lg mt-1">Waterlelies</h3>
+                            <p class="text-slate-400 text-xs mt-1">Claude Monet (1919)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-slate-800 via-slate-700 to-amber-900 flex items-center justify-center text-5xl">
+                            🖼️
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-amber-400 uppercase">Barok</span>
+                            <h3 class="font-bold text-white text-lg mt-1">De Nachtwacht</h3>
+                            <p class="text-slate-400 text-xs mt-1">Rembrandt van Rijn (1642)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Certificaat Generator -->
+        <section class="py-12 border-t border-slate-800 bg-slate-900">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold text-white">Officieel Kunstacademie Certificaat</h2>
+                <p class="text-slate-400 mt-2">Vul je naam in om jouw persoonlijke certificaat van deelname te genereren!</p>
+
+                <div class="mt-6 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input type="text" id="cert-name-input" placeholder="Vul je volledige naam in..." class="flex-grow px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                    <button onclick="generateCertificate()" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                        Genereer 📜
+                    </button>
+                </div>
+
+                <!-- Certificate Display Box -->
+                <div id="certificate-box" class="hidden mt-8 p-8 bg-gradient-to-b from-amber-50 to-amber-100 text-slate-900 rounded-3xl border-8 border-amber-300 shadow-2xl relative max-w-2xl mx-auto">
+                    <div class="border-2 border-amber-700/30 p-8 rounded-2xl">
+                        <div class="text-3xl font-serif text-amber-900 font-bold mb-2">CERTIFICAAT VAN DEELNAME</div>
+                        <div class="text-xs uppercase tracking-widest text-amber-700 font-semibold mb-6">De Digitale Kunstacademie</div>
+                        
+                        <p class="text-sm text-slate-700">Dit certificaat wordt met trots uitgereikt aan:</p>
+                        <div id="cert-display-name" class="text-3xl font-bold text-emerald-800 font-serif my-4">Naam Kunstenaar</div>
+                        <p class="text-sm text-slate-700 max-w-md mx-auto">
+                            Voor het succesvol afronden van de interactieve kunsteducatie modules en het behalen van de praktijkoefeningen.
+                        </p>
+
+                        <div class="mt-8 pt-6 border-t border-amber-800/20 flex justify-between items-center text-xs text-amber-900 font-semibold">
+                            <div>Datum: <span id="cert-date">--/--/----</span></div>
+                            <div class="text-emerald-700 font-bold">✓ Officieel Geverifieerd</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contactformulier -->
+        <section class="py-12 border-t border-slate-800 bg-slate-950">
+            <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-white text-center">Vragen of Feedback?</h2>
+                <p class="text-slate-400 text-sm text-center mt-1 mb-6">Neem contact op met onze docenten van de Kunstacademie.</p>
+
+                <form onsubmit="handleContactSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Naam</label>
+                        <input type="text" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">E-mailadres</label>
+                        <input type="email" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Bericht</label>
+                        <textarea rows="3" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 transition-colors">
+                        Verstuur Bericht
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- SCHERM 2: SPEL (Nieuwe Bos-Arena met HP-balkjes boven het hoofd) -->
+    <div id="screen-spel" class="hidden flex-grow flex flex-col">
+        
+        <!-- Game Header Bar -->
+        <div class="bg-slate-950 border-b border-slate-800 py-3 px-4 sm:px-8 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                    Level <span id="game-level-num">1</span>
+                </span>
+                <span class="text-sm font-semibold text-slate-300 hidden sm:inline">
+                    Bos Arena - Versla de Zombies!
+                </span>
+            </div>
+
+            <!-- Action Points Display -->
+            <div class="flex items-center space-x-3 bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 rounded-2xl">
+                <span class="text-amber-400 text-lg">⭐</span>
+                <div class="text-right">
+                    <span class="text-[10px] uppercase font-bold text-amber-400 block leading-tight">Actiepunten</span>
+                    <span id="game-points-display" class="text-xl font-black text-amber-300 leading-none">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bos Arena Main Stage -->
+        <div class="forest-arena flex-grow flex flex-col justify-between p-4 sm:p-8 min-h-[500px]">
+            <div class="forest-trees absolute inset-0 pointer-events-none"></div>
+
+            <!-- Overlays: Game Over & Level Complete -->
+            <div id="game-over-overlay" class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-20 h-20 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-4xl mb-4 animate-bounce">
+                    💀
+                </div>
+                <h2 class="text-4xl font-extrabold text-red-500">GAME OVER</h2>
+                <p class="text-slate-300 max-w-md mt-2 text-sm">
+                    De zombies hebben je overrompeld! Je bent teruggezet naar Level 1. Je opgebouwde actiepunten blijven gewoon behouden.
+                </p>
+                <button onclick="restartGame()" class="mt-6 px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-2xl shadow-xl shadow-red-600/30 transition-transform hover:scale-105">
+                    🔄 Opnieuw Proberen
+                </button>
+            </div>
+
+            <div id="level-complete-overlay" class="hidden absolute inset-0 z-30 bg-emerald-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-4xl mb-4 animate-bounce">
+                    🏆
+                </div>
+                <h2 class="text-4xl font-extrabold text-emerald-400">LEVEL VOLTOOID!</h2>
+                <p class="text-slate-300 max-w-md mt-2 text-sm">
+                    Geweldig gedaan! Je hebt alle zombies in deze bos-zone uitgeschakeld. Je maximale HP stijgt voor het volgende level!
+                </p>
+                <button onclick="nextLevel()" class="mt-6 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-2xl shadow-xl shadow-emerald-500/30 transition-transform hover:scale-105">
+                    ➔ Naar Volgende Zone
+                </button>
+            </div>
+
+            <!-- Arena Characters Stage (Left: Artist, Right: Zombies) -->
+            <div class="relative z-10 max-w-5xl mx-auto w-full grid grid-cols-2 gap-4 sm:gap-12 items-end my-auto py-8">
+                
+                <!-- LEFT SIDE: JIJ (De Kunstenaar) met HP balk Boven de Kop -->
+                <div id="player-stage-card" class="flex flex-col items-center">
+                    
+                    <!-- HP Balk Recht BOVEN het Hoofd van de Kunstenaar -->
+                    <div class="w-36 sm:w-48 bg-slate-900/90 p-2 rounded-2xl border border-slate-700/80 shadow-2xl mb-3 backdrop-blur-sm">
+                        <div class="flex justify-between text-xs font-bold text-slate-200 mb-1">
+                            <span>🧑‍🎨 Jij</span>
+                            <span id="player-hp-text">100/100</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-3.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="player-hp-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 100%;"></div>
+                        </div>
+                        <div id="player-status-badge" class="mt-1 h-4 flex justify-center items-center">
+                            <!-- Shield badge dynamically inserted -->
+                        </div>
+                    </div>
+
+                    <!-- Character Avatar Sprite -->
+                    <div id="player-avatar" class="relative group">
+                        <div class="w-28 h-28 sm:w-36 sm:h-36 bg-gradient-to-b from-blue-500/20 to-teal-500/40 rounded-3xl border-2 border-blue-400/50 flex items-center justify-center text-6xl sm:text-7xl shadow-2xl backdrop-blur-sm transition-transform duration-200">
+                            🧑‍🎨
+                        </div>
+                        <!-- Canvas pallet accessory -->
+                        <div class="absolute -bottom-2 -right-2 bg-amber-400 text-slate-950 p-2 rounded-full text-xl shadow-lg">
+                            🎨
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT SIDE: ZOMBIE(S) met HP balk Boven de Kop -->
+                <div id="zombies-stage-container" class="flex flex-wrap justify-center gap-4 items-end">
+                    <!-- Zombies dynamically rendered with HP bar on top of each -->
+                </div>
+
+            </div>
+
+            <!-- Combat Controls HUD & Log -->
+            <div class="relative z-10 max-w-4xl mx-auto w-full bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-800 p-4 sm:p-6 shadow-2xl space-y-4">
+                
+                <!-- Turn Indicator & Action Buttons Header -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span id="turn-status-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        Jouw Beurt!
+                    </span>
+                    <span class="text-xs text-slate-400">
+                        Kies een actie met je punten
+                    </span>
+                </div>
+
+                <!-- 4 Action Buttons Grid (Punt 2 & 4) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button id="btn-act-weak" onclick="playerAction('weak')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">🗡️ Zwak</div>
+                            <div class="text-[11px] text-slate-400">Kleine schade</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">1 pt</span>
+                    </button>
+
+                    <button id="btn-act-shield" onclick="playerAction('shield')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">🛡️ Schild</div>
+                            <div class="text-[11px] text-slate-400">Blokkeer aanval</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">2 pt</span>
+                    </button>
+
+                    <button id="btn-act-strong" onclick="playerAction('strong')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">💥 Sterk</div>
+                            <div class="text-[11px] text-slate-400">Grote schade</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">3 pt</span>
+                    </button>
+
+                    <button id="btn-act-heal" onclick="playerAction('heal')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">💖 Heal</div>
+                            <div class="text-[11px] text-slate-400">+30 HP Herstel</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">5 pt</span>
+                    </button>
+                </div>
+
+                <!-- Combat Log Box -->
+                <div class="h-24 overflow-y-auto custom-scrollbar bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-1" id="combat-log-container">
+                    <!-- Logs inserted dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // --- CURSUS & LEERMODULES DATA ---
+        const coursesData = [
+            {
+                id: 'mod1',
+                category: 'schilderen',
+                title: 'Niveau 1: Kleurenleer & Mengtechnieken',
+                description: 'Ontdek hoe je met primaire kleuren de mooiste secundaire tinten mengt.',
+                levelBadge: 'Schilderen • Basis',
+                theorie: `
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">De Wereld van Primaire Kleuren</h3>
+                    <p>In de schilderkunst werken we met drie basiskleuren die we niet zelf kunnen maken door te mengen: <strong>Rood</strong>, <strong>Geel</strong> en <strong>Blauw</strong>.</p>
+                    <p class="mt-2">Door deze kleuren in gelijke verhoudingen te combineren ontstaan de <em>secundaire kleuren</em>:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                        <li>Rood + Geel = <strong>Oranje</strong></li>
+                        <li>Geel + Blauw = <strong>Groen</strong></li>
+                        <li>Blauw + Rood = <strong>Paars</strong></li>
+                    </ul>
+                `,
+                opdracht: 'Gebruik de kleurkiezer in de studio en maak een mooie regenboog of een meng-compositie met minimaal 3 kleuren.',
+                quiz: [
+                    { q: "Wat zijn de drie primaire kleuren?", options: ["Groen, Oranje, Paars", "Rood, Geel, Blauw", "Zwart, Wit, Grijs", "Rood, Blauw, Groen"], answer: "Rood, Geel, Blauw", exp: "Rood, geel en blauw zijn de zuivere basiskleuren." },
+                    { q: "Welke secundaire kleur krijg je door Blauw en Geel te mengen?", options: ["Paars", "Oranje", "Groen", "Bruin"], answer: "Groen", exp: "Geel gemengd met blauw geeft de kleur groen." },
+                    { q: "Kun je primaire kleuren maken door andere kleuren te mengen?", options: ["Nee, het zijn basiskleuren", "Ja, met wit erbij", "Alleen in waterverf", "Ja, door alles te mengen"], answer: "Nee, het zijn basiskleuren", exp: "Primaire kleuren zijn niet te maken uit mengsels." },
+                    { q: "Wat voor kleur is Oranje?", options: ["Tertiair", "Primair", "Secundair", "Neutraal"], answer: "Secundair", exp: "Oranje is een secundaire kleur gemaakt van rood en geel." },
+                    { q: "Wat gebeurt er als je alle drie de primaire kleuren door elkaar mengt?", options: ["Helder Wit", "Een donkerbruine/grijze tint", "Lichtblauw", "Neon geel"], answer: "Een donkerbruine/grijze tint", exp: "Het mengen van alle primaire kleuren absorbeert al het licht." }
+                ]
+            },
+            {
+                id: 'mod2',
+                category: 'tekenen',
+                title: 'Niveau 2: Vormen & Ruimtelijk Perspectief',
+                description: 'Leer hoe je diepte maakt op een plat vlak met verdwijnpunten.',
+                levelBadge: 'Tekenen • Gemiddeld',
+                theorie: `
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">Eenpuntsperspectief</h3>
+                    <p>Om een plat papier 3D te laten lijken gebruiken we een <strong>horizonlijn</strong> met een <strong>verdwijnpunt</strong>.</p>
+                    <p class="mt-2">Alle lijnen die de diepte in lopen (zoals de zijkanten van een weg of gebouw) komen samen in dat ene punt. Objecten die dichtbij staan teken je groot, en ver weg worden ze kleiner.</p>
+                `,
+                opdracht: 'Teken een horizonlijn met een verdwijnpunt in het midden en teken een spoorlijn of weg die smal naar achteren loopt.',
+                quiz: [
+                    { q: "Wat is een verdwijnpunt in perspectief?", options: ["Een foute lijn", "Het punt waar wijkende lijnen samenkomen", "De rand van het papier", "Het middelpunt van een cirkel"], answer: "Het punt waar wijkende lijnen samenkomen", exp: "In dit punt lijken alle parallelle dieptelijnen samen te komen." },
+                    { q: "Hoe teken je objecten die verder weg staan?", options: ["Groter", "Kleiner", "Precies even groot", "Onzichtbaar"], answer: "Kleiner", exp: "Door perspectief lijken objecten kleiner naarmate ze verder weg zijn." },
+                    { q: "Waar bevindt de horizonlijn zich meestal?", options: ["Op de grond", "Op ooghoogte van de kijker", "Bovenaan het papier", "Willekeurig"], answer: "Op ooghoogte van de kijker", exp: "De horizon staat gelijk aan de ooghoogte." },
+                    { q: "Hoeveel verdwijnpunten heeft eenpuntsperspectief?", options: ["Één", "Twee", "Drie", "Geen"], answer: "Één", exp: "De naam zegt het al: één verdwijnpunt op de horizon." },
+                    { q: "Welke vorm creëert de meeste stabiliteit in een compositie?", options: ["Cirkel", "Vierkant", "Spiraal", "Golvende lijn"], answer: "Vierkant", exp: "Vierkanten en rechthoeken geven rust en stevigheid." }
+                ]
+            },
+            {
+                id: 'mod3',
+                category: 'historie',
+                title: 'Niveau 3: Kunststromingen door de Eeuwen',
+                description: 'Van de klassieke Renaissance tot het moderne Impressionisme.',
+                levelBadge: 'Historie • Gevorderd',
+                theorie: `
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">Impressionisme & Lichtval</h3>
+                    <p>Het Impressionisme ontstond in het Frankrijk van de 19e eeuw. Kunstenaars zoals Claude Monet wilden niet meer een exacte foto maken, maar de <strong>impressie van het moment</strong> en het veranderende zonlicht vastleggen.</p>
+                    <p class="mt-2">Ze werkten met snelle, zichtbare penseelstreken en schilderden graag buiten in de natuur (en plein air).</p>
+                `,
+                opdracht: 'Maak een impressionistisch landschapje met snelle, losse stippen en strepen in heldere kleuren.',
+                quiz: [
+                    { q: "Wat probeerden de Impressionisten vooral te vangen?", options: ["Fotografische details", "De impressie van licht en moment", "Abstracte geometrie", "Bijbelse verhalen"], answer: "De impressie van licht en moment", exp: "Ze focusten op veranderend licht en de sfeer van het moment." },
+                    { q: "Wie is een van de beroemdste Impressionistische schilders?", options: ["Claude Monet", "Rembrandt", "Picasso", "Mondriaan"], answer: "Claude Monet", exp: "Monet staat bekend om zijn Waterlelies en Impression, Sunrise." },
+                    { q: "Waar schilderden Impressionisten bij voorkeur?", options: ["In een donker atelier", "Buiten in de natuur (en plein air)", "In de kerk", "Vanuit hun hoofd"], answer: "Buiten in de natuur (en plein air)", exp: "Buiten konden ze direct het natuurlijke licht observeren." },
+                    { q: "Hoe zien de penseelstreken er vaak uit bij Impressionisme?", options: ["Onzichtbaar en glad", "Snel, los en zichtbaar", "Strakke liniaal-lijnen", "Gekraste potloodlijnen"], answer: "Snel, los en zichtbaar", exp: "Losse strepen zorgen voor dynamiek en trillend licht." },
+                    { q: "In welk land ontstond het Impressionisme?", options: ["Nederland", "Frankrijk", "Italië", "Duitsland"], answer: "Frankrijk", exp: "Het ontstond rond 1870 in Parijs, Frankrijk." }
+                ]
+            }
+        ];
+
+        // --- APP STATE PERSISTENCE ---
+        const DEFAULT_STATE = {
+            points: 0,
+            completedTasks: {}, // { 'mod1_theorie': true, 'mod1_tekenen': true, 'mod1_quiz': true }
+            
+            // Game State
+            gameLevel: 1,
+            playerHp: 100,
+            playerMaxHp: 100,
+            playerShield: false,
+            zombies: [],
+            selectedZombieId: null,
+            isPlayerTurn: true,
+            combatLog: []
+        };
+
+        let appState = JSON.parse(localStorage.getItem('kunstacademie_state_v2')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+        function saveState() {
+            localStorage.setItem('kunstacademie_state_v2', JSON.stringify(appState));
+            updateUI();
+        }
+
+        function addPoints(amount) {
+            appState.points += amount;
+            saveState();
+            showToast(`+${amount} Punten verdiend! ⭐`);
+        }
+
+        function spendPoints(amount) {
+            if (appState.points >= amount) {
+                appState.points -= amount;
+                saveState();
+                return true;
+            }
+            return false;
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-emerald-500 text-slate-950 px-4 py-2.5 rounded-xl font-extrabold text-sm shadow-xl flex items-center gap-2 transition-all transform translate-y-2';
+            toast.innerHTML = `<span>✨</span><span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // --- NAVIGATION BETWEEN SCHERMEN ---
+        function switchTab(tab) {
+            const screenLeren = document.getElementById('screen-leren');
+            const screenSpel = document.getElementById('screen-spel');
+            const btnLeren = document.getElementById('tab-btn-leren');
+            const btnSpel = document.getElementById('tab-btn-spel');
+
+            if (tab === 'leren') {
+                screenLeren.classList.remove('hidden');
+                screenSpel.classList.add('hidden');
+                btnLeren.classList.add('active');
+                btnSpel.classList.remove('active');
+            } else {
+                screenLeren.classList.add('hidden');
+                screenSpel.classList.remove('hidden');
+                btnLeren.classList.remove('active');
+                btnSpel.classList.add('active');
+
+                initGameIfNeeded();
+            }
+            updateUI();
+        }
+
+        // --- LEREN SECTION LOGIC ---
+        let currentModule = null;
+        let activeCategory = 'all';
+        let currentShuffledQuiz = [];
+
+        function renderCourses() {
+            const grid = document.getElementById('courses-grid');
+            grid.innerHTML = '';
+
+            const filtered = coursesData.filter(c => activeCategory === 'all' || c.category === activeCategory);
+
+            filtered.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800/80 border border-slate-700/60 rounded-3xl p-6 flex flex-col justify-between hover:border-emerald-500/50 transition-all group';
+
+                const thDone = appState.completedTasks[`${course.id}_theorie`];
+                const tkDone = appState.completedTasks[`${course.id}_tekenen`];
+                const qzDone = appState.completedTasks[`${course.id}_quiz`];
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                                ${course.levelBadge}
+                            </span>
+                            <div class="flex gap-1 text-xs">
+                                ${thDone ? '📖' : ''} ${tkDone ? '🖌️' : ''} ${qzDone ? '🏆' : ''}
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors">${course.title}</h3>
+                        <p class="text-slate-400 text-sm mt-2 leading-relaxed">${course.description}</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-between">
+                        <span class="text-xs text-amber-400 font-bold">Tot 6.0 Pt te verdienen</span>
+                        <button onclick="openWorkspace('${course.id}')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                            Start Module ➔
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-filter').forEach(btn => {
+                btn.className = 'cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all';
+            });
+            event.target.className = 'cat-filter active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 text-white transition-all';
+            renderCourses();
+        }
+
+        function openWorkspace(modId) {
+            currentModule = coursesData.find(m => m.id === modId);
+            document.getElementById('workspace-modal').classList.remove('hidden');
+            document.getElementById('workspace-title').textContent = currentModule.title;
+            document.getElementById('theorie-text').innerHTML = currentModule.theorie;
+            document.getElementById('teken-instructions').textContent = currentModule.opdracht;
+
+            switchWorkspaceSubTab('theorie');
+            checkTaskButtonsStatus();
+            setupQuiz();
+        }
+
+        function closeWorkspace() {
+            document.getElementById('workspace-modal').classList.add('hidden');
+            currentModule = null;
+        }
+
+        function switchWorkspaceSubTab(tab) {
+            document.getElementById('ws-content-theorie').classList.add('hidden');
+            document.getElementById('ws-content-tekenen').classList.add('hidden');
+            document.getElementById('ws-content-quiz').classList.add('hidden');
+
+            document.getElementById('subtab-theorie').className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+            document.getElementById('subtab-tekenen').className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+            document.getElementById('subtab-quiz').className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+
+            document.getElementById(`ws-content-${tab}`).classList.remove('hidden');
+            const activeSub = document.getElementById(`subtab-${tab}`);
+            activeSub.className = 'py-3 px-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400';
+
+            if (tab === 'tekenen') {
+                setTimeout(resizeStudioCanvas, 50);
+            }
+        }
+
+        function checkTaskButtonsStatus() {
+            const thDone = appState.completedTasks[`${currentModule.id}_theorie`];
+            const btnTh = document.getElementById('btn-complete-theorie');
+            if (thDone) {
+                btnTh.textContent = '✓ Gelezen (Punten Ontvangen)';
+                btnTh.disabled = true;
+                btnTh.className = 'px-5 py-2.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed';
+            } else {
+                btnTh.textContent = 'Markeer als Gelezen (+0.5 pt)';
+                btnTh.disabled = false;
+                btnTh.className = 'px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20';
+            }
+
+            const tkDone = appState.completedTasks[`${currentModule.id}_tekenen`];
+            const btnTk = document.getElementById('btn-complete-tekenen');
+            if (tkDone) {
+                btnTk.textContent = '✓ Ingeleverd (Punten Ontvangen)';
+                btnTk.disabled = true;
+                btnTk.className = 'px-5 py-2.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed';
+            } else {
+                btnTk.textContent = 'Tekening Inleveren (+0.5 pt)';
+                btnTk.disabled = false;
+                btnTk.className = 'px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20';
+            }
+        }
+
+        function completeTheorie() {
+            const key = `${currentModule.id}_theorie`;
+            if (!appState.completedTasks[key]) {
+                appState.completedTasks[key] = true;
+                addPoints(0.5);
+                checkTaskButtonsStatus();
+            }
+        }
+
+        function completeTekenen() {
+            const key = `${currentModule.id}_tekenen`;
+            if (!appState.completedTasks[key]) {
+                appState.completedTasks[key] = true;
+                addPoints(0.5);
+                checkTaskButtonsStatus();
+            }
+        }
+
+        // --- TEKENSTUDIO LOGICA ---
+        const studioCanvas = document.getElementById('studioCanvas');
+        const studioCtx = studioCanvas.getContext('2d');
+        let isDrawing = false;
+        let brushColor = '#000000';
+        let brushSize = 6;
+
+        function resizeStudioCanvas() {
+            const parent = studioCanvas.parentElement;
+            studioCanvas.width = parent.clientWidth;
+            studioCtx.fillStyle = '#ffffff';
+            studioCtx.fillRect(0, 0, studioCanvas.width, studioCanvas.height);
+        }
+
+        function setCanvasColor(color) {
+            brushColor = color;
+            document.getElementById('colorPicker').value = color;
+        }
+
+        document.getElementById('colorPicker').addEventListener('input', (e) => brushColor = e.target.value);
+
+        function setBrushSize(size) { brushSize = size; }
+
+        function clearCanvas() {
+            studioCtx.fillStyle = '#ffffff';
+            studioCtx.fillRect(0, 0, studioCanvas.width, studioCanvas.height);
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = 'mijn-kunstwerk.png';
+            link.href = studioCanvas.toDataURL();
+            link.click();
+        }
+
+        function getCanvasCoords(e) {
+            const rect = studioCanvas.getBoundingClientRect();
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if (e.touches && e.touches[0]) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        studioCanvas.addEventListener('mousedown', (e) => { isDrawing = true; drawStroke(e); });
+        studioCanvas.addEventListener('mousemove', (e) => { if(isDrawing) drawStroke(e); });
+        studioCanvas.addEventListener('mouseup', () => { isDrawing = false; studioCtx.beginPath(); });
+        studioCanvas.addEventListener('touchstart', (e) => { isDrawing = true; drawStroke(e); }, {passive: false});
+        studioCanvas.addEventListener('touchmove', (e) => { if(isDrawing) drawStroke(e); }, {passive: false});
+        studioCanvas.addEventListener('touchend', () => { isDrawing = false; studioCtx.beginPath(); });
+
+        function drawStroke(e) {
+            e.preventDefault();
+            const pos = getCanvasCoords(e);
+            studioCtx.lineWidth = brushSize;
+            studioCtx.lineCap = 'round';
+            studioCtx.strokeStyle = brushColor;
+            studioCtx.lineTo(pos.x, pos.y);
+            studioCtx.stroke();
+            studioCtx.beginPath();
+            studioCtx.moveTo(pos.x, pos.y);
+        }
+
+        // --- QUIZ LOGICA (Willekeurige Volgorde & Feedback) ---
+        function shuffleArray(arr) {
+            const array = [...arr];
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function setupQuiz() {
+            const container = document.getElementById('quiz-questions-list');
+            container.innerHTML = '';
+            document.getElementById('quiz-feedback-box').classList.add('hidden');
+            document.getElementById('btn-check-quiz').classList.remove('hidden');
+            document.getElementById('btn-retry-quiz').classList.add('hidden');
+
+            const isDone = appState.completedTasks[`${currentModule.id}_quiz`];
+            if (isDone) {
+                container.innerHTML = `<div class="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-center font-bold">
+                    🏆 Je hebt deze quiz al afgerond en alle punten behaald!
+                </div>`;
+                document.getElementById('btn-check-quiz').classList.add('hidden');
+                return;
+            }
+
+            // Shuffle questions and options
+            currentShuffledQuiz = shuffleArray(currentModule.quiz).map(q => ({
+                ...q,
+                shuffledOptions: shuffleArray(q.options)
+            }));
+
+            currentShuffledQuiz.forEach((qItem, qIdx) => {
+                const qCard = document.createElement('div');
+                qCard.className = 'p-5 bg-slate-950/60 rounded-2xl border border-slate-800 space-y-3';
+                
+                let html = `<div class="font-bold text-white text-base">${qIdx + 1}. ${qItem.q}</div><div class="space-y-2">`;
+                
+                qItem.shuffledOptions.forEach((optText, optIdx) => {
+                    html += `
+                        <label class="opt-label block p-3 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 cursor-pointer transition-all flex items-center gap-3" id="q${qIdx}-opt${optIdx}-label">
+                            <input type="radio" name="q${qIdx}" value="${optText.replace(/"/g, '&quot;')}" class="accent-emerald-500">
+                            <span class="text-sm text-slate-300 font-medium">${optText}</span>
+                        </label>
+                    `;
+                });
+                html += `</div><div id="q${qIdx}-exp" class="hidden text-xs mt-2 p-2 rounded-lg bg-slate-900 text-slate-400 border border-slate-800"></div>`;
+                qCard.innerHTML = html;
+                container.appendChild(qCard);
+            });
+        }
+
+        function checkQuiz() {
+            let correctCount = 0;
+            let total = currentShuffledQuiz.length;
+
+            currentShuffledQuiz.forEach((qItem, qIdx) => {
+                const selected = document.querySelector(`input[name="q${qIdx}"]:checked`);
+                const expDiv = document.getElementById(`q${qIdx}-exp`);
+                expDiv.classList.remove('hidden');
+                expDiv.textContent = `💡 Uitleg: ${qItem.exp}`;
+
+                qItem.shuffledOptions.forEach((optText, optIdx) => {
+                    const label = document.getElementById(`q${qIdx}-opt${optIdx}-label`);
+                    if (optText === qItem.answer) {
+                        label.className = 'opt-label block p-3 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 text-emerald-300 font-bold';
+                    } else if (selected && selected.value === optText) {
+                        label.className = 'opt-label block p-3 rounded-xl border-2 border-red-500 bg-red-500/10 text-red-300 font-bold';
+                    }
+                });
+
+                if (selected && selected.value === qItem.answer) {
+                    correctCount++;
+                }
+            });
+
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            const feedbackTitle = document.getElementById('quiz-feedback-title');
+            const feedbackBody = document.getElementById('quiz-feedback-body');
+            feedbackBox.classList.remove('hidden');
+
+            if (correctCount >= 4) {
+                // Slagen!
+                feedbackBox.className = 'p-5 rounded-2xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 space-y-2';
+                feedbackTitle.textContent = `🎉 Geweldig! Je hebt ${correctCount}/${total} vragen goed geschat!`;
+                feedbackBody.textContent = `Je hebt ${correctCount} punten verdiend! Je kunt deze direct gebruiken in het spel.`;
+                
+                addPoints(correctCount);
+                appState.completedTasks[`${currentModule.id}_quiz`] = true;
+                saveState();
+
+                document.getElementById('btn-check-quiz').classList.add('hidden');
+            } else {
+                // Gefaald: mag opnieuw proberen
+                feedbackBox.className = 'p-5 rounded-2xl border bg-red-500/10 border-red-500/30 text-red-300 space-y-2';
+                feedbackTitle.textContent = `❌ Je scoorde ${correctCount}/${total}. Probeer het opnieuw!`;
+                feedbackBody.textContent = `Je hebt minstens 4 van de 5 vragen goed nodig om te slagen en punten te verdienen. Probeer het opnieuw!`;
+
+                document.getElementById('btn-check-quiz').classList.add('hidden');
+                document.getElementById('btn-retry-quiz').classList.remove('hidden');
+            }
+        }
+
+        function retryQuiz() {
+            setupQuiz();
+        }
+
+        function generateCertificate() {
+            const name = document.getElementById('cert-name-input').value.trim();
+            if (!name) {
+                alert("Vul a.u.b. eerst je naam in!");
+                return;
+            }
+            document.getElementById('cert-display-name').textContent = name;
+            document.getElementById('cert-date').textContent = new Date().toLocaleDateString('nl-NL');
+            document.getElementById('certificate-box').classList.remove('hidden');
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            alert("Bedankt voor je bericht! Een van onze docenten neemt zo snel mogelijk contact met je op.");
+            e.target.reset();
+        }
+
+        // ==========================================
+        //  DEEL 2: SPEL ENGINE (Bos-Arena met HP op hoofd)
+        // ==========================================
+
+        const ZOMBIE_PROFILES = [
+            { name: "Verf-Knoeier", hp: 30, dmg: 6, emoji: "🧟" },
+            { name: "Gum-Monster", hp: 45, dmg: 9, emoji: "🧟‍♂️" },
+            { name: "Klei-Griezel", hp: 65, dmg: 14, emoji: "🧌" }
+        ];
+
+        function initGameIfNeeded() {
+            restoreCombatLog();
+            if (appState.zombies.length === 0 && appState.playerHp > 0) {
+                spawnLevel(appState.gameLevel);
+            } else {
+                renderGameStage();
+            }
+        }
+
+        function spawnLevel(lvlNum) {
+            appState.gameLevel = lvlNum;
+            appState.zombies = [];
+            appState.isPlayerTurn = true;
+            appState.playerShield = false;
+
+            const count = Math.min(1 + Math.floor(lvlNum / 2), 3);
+            for (let i = 0; i < count; i++) {
+                const profile = ZOMBIE_PROFILES[Math.min(i, ZOMBIE_PROFILES.length - 1)];
+                const hpScale = 1 + (lvlNum * 0.2);
+                const dmgScale = 1 + (lvlNum * 0.15);
+
+                appState.zombies.push({
+                    id: Date.now() + i,
+                    name: profile.name,
+                    hp: Math.floor(profile.hp * hpScale),
+                    maxHp: Math.floor(profile.hp * hpScale),
+                    attack: Math.floor(profile.dmg * dmgScale),
+                    emoji: profile.emoji
+                });
+            }
+
+            if (appState.zombies.length > 0) {
+                appState.selectedZombieId = appState.zombies[0].id;
+            }
+
+            logCombat(`--- BOS ZONE LEVEL ${lvlNum} ---`, 'system');
+            saveState();
+            renderGameStage();
+        }
+
+        function renderGameStage() {
+            // Render Player HP Bar Above Player
+            const hpPct = Math.max(0, (appState.playerHp / appState.playerMaxHp) * 100);
+            const playerHpBar = document.getElementById('player-hp-bar');
+            playerHpBar.style.width = `${hpPct}%`;
+            document.getElementById('player-hp-text').textContent = `${Math.ceil(appState.playerHp)}/${appState.playerMaxHp}`;
+
+            if (hpPct > 50) playerHpBar.className = 'h-full bg-emerald-500 transition-all duration-300';
+            else if (hpPct > 20) playerHpBar.className = 'h-full bg-amber-500 transition-all duration-300';
+            else playerHpBar.className = 'h-full bg-red-600 animate-pulse transition-all duration-300';
+
+            const statusBadge = document.getElementById('player-status-badge');
+            const playerAvatar = document.getElementById('player-avatar');
+            if (appState.playerShield) {
+                statusBadge.innerHTML = `<span class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/40 px-2 py-0.5 rounded-full font-bold">🛡️ Schild Actief</span>`;
+                playerAvatar.firstElementChild.classList.add('shield-glow');
+            } else {
+                statusBadge.innerHTML = '';
+                playerAvatar.firstElementChild.classList.remove('shield-glow');
+            }
+
+            // Render Zombies with HP bar Directly Above Head
+            const zombiesContainer = document.getElementById('zombies-stage-container');
+            zombiesContainer.innerHTML = '';
+
+            appState.zombies.forEach(z => {
+                const zHpPct = Math.max(0, (z.hp / z.maxHp) * 100);
+                const isSelected = z.id === appState.selectedZombieId;
+
+                const zCard = document.createElement('div');
+                zCard.className = `flex flex-col items-center cursor-pointer transition-transform hover:scale-105 ${isSelected ? 'scale-105' : ''}`;
+                zCard.onclick = () => {
+                    if (appState.isPlayerTurn) {
+                        appState.selectedZombieId = z.id;
+                        saveState();
+                        renderGameStage();
+                    }
+                };
+
+                zCard.innerHTML = `
+                    <!-- HP Balk BOVEN het Hoofd van de Zombie -->
+                    <div class="w-32 sm:w-40 bg-slate-900/90 p-1.5 rounded-2xl border ${isSelected ? 'border-red-500 ring-2 ring-red-500/50' : 'border-slate-700/80'} shadow-xl mb-2 backdrop-blur-sm">
+                        <div class="flex justify-between text-[11px] font-bold text-slate-200 mb-0.5">
+                            <span class="truncate max-w-[80px]">${z.name}</span>
+                            <span>${z.hp}/${z.maxHp}</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full bg-red-500 transition-all duration-300" style="width: ${zHpPct}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Zombie Avatar Sprite -->
+                    <div class="relative">
+                        <div class="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-b from-red-950/40 to-slate-900/80 rounded-3xl border-2 ${isSelected ? 'border-red-500' : 'border-slate-700'} flex items-center justify-center text-5xl sm:text-6xl shadow-2xl backdrop-blur-sm">
+                            ${z.emoji}
+                        </div>
+                        ${isSelected ? '<div class="absolute -top-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">Doelwit</div>' : ''}
+                    </div>
+                `;
+                zombiesContainer.appendChild(zCard);
+            });
+
+            // Action Buttons Availability (Punt 4)
+            const isTurn = appState.isPlayerTurn;
+            const pts = appState.points;
+            const hasZombie = appState.zombies.length > 0;
+
+            document.getElementById('btn-act-weak').disabled = !isTurn || pts < 1 || !hasZombie;
+            document.getElementById('btn-act-shield').disabled = !isTurn || pts < 2 || !hasZombie || appState.playerShield;
+            document.getElementById('btn-act-strong').disabled = !isTurn || pts < 3 || !hasZombie;
+            document.getElementById('btn-act-heal').disabled = !isTurn || pts < 5 || !hasZombie || appState.playerHp >= appState.playerMaxHp;
+
+            const turnBadge = document.getElementById('turn-status-badge');
+            if (isTurn) {
+                turnBadge.textContent = "Jouw Beurt!";
+                turnBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 animate-pulse";
+            } else {
+                turnBadge.textContent = "Zombies vallen aan...";
+                turnBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+            }
+        }
+
+        function playerAction(actType) {
+            if (!appState.isPlayerTurn) return;
+
+            const targetIdx = appState.zombies.findIndex(z => z.id === appState.selectedZombieId);
+            const target = targetIdx !== -1 ? appState.zombies[targetIdx] : appState.zombies[0];
+
+            let success = false;
+
+            if (actType === 'weak') {
+                if (spendPoints(1)) {
+                    const dmg = 12 + (appState.gameLevel * 3);
+                    target.hp -= dmg;
+                    logCombat(`🗡️ Zwakke aanval op ${target.name} voor ${dmg} schade.`, 'player-dmg');
+                    success = true;
+                }
+            } else if (actType === 'strong') {
+                if (spendPoints(3)) {
+                    const dmg = 28 + (appState.gameLevel * 5);
+                    target.hp -= dmg;
+                    logCombat(`💥 STERKE AANVAL op ${target.name} voor ${dmg} schade!`, 'player-dmg');
+                    success = true;
+                }
+            } else if (actType === 'shield') {
+                if (spendPoints(2)) {
+                    appState.playerShield = true;
+                    logCombat(`🛡️ Schild geactiveerd! Volgende zombie-aanval wordt geblokkeerd.`, 'system');
+                    success = true;
+                }
+            } else if (actType === 'heal') {
+                if (spendPoints(5)) {
+                    const heal = 30;
+                    appState.playerHp = Math.min(appState.playerMaxHp, appState.playerHp + heal);
+                    logCombat(`💖 Jouw kunstenaar herstelt +${heal} HP!`, 'player-heal');
+                    success = true;
+                }
+            }
+
+            if (success) {
+                appState.isPlayerTurn = false;
+
+                if (target && target.hp <= 0) {
+                    logCombat(`💀 ${target.name} is verslagen!`, 'system');
+                    appState.zombies = appState.zombies.filter(z => z.hp > 0);
+                    appState.selectedZombieId = appState.zombies.length > 0 ? appState.zombies[0].id : null;
+                }
+
+                saveState();
+                renderGameStage();
+
+                if (appState.zombies.length === 0) {
+                    setTimeout(() => {
+                        document.getElementById('level-complete-overlay').classList.remove('hidden');
+                    }, 400);
+                } else {
+                    setTimeout(zombiesTurn, 800);
+                }
+            }
+        }
+
+        function zombiesTurn() {
+            if (appState.zombies.length === 0 || appState.playerHp <= 0) return;
+
+            let totalDmg = 0;
+            appState.zombies.forEach(z => totalDmg += z.attack);
+
+            if (appState.playerShield) {
+                logCombat(`🛡️ Zombies vallen aan voor ${totalDmg} schade, maar je SCHILD BLOKKEERT ALLES!`, 'system');
+                appState.playerShield = false;
+            } else {
+                appState.playerHp -= totalDmg;
+                logCombat(`🧟 Zombies vallen aan en doen ${totalDmg} schade!`, 'enemy-dmg');
+                document.getElementById('player-stage-card').classList.add('animate-hit');
+                setTimeout(() => document.getElementById('player-stage-card').classList.remove('animate-hit'), 400);
+            }
+
+            appState.isPlayerTurn = true;
+            saveState();
+            renderGameStage();
+
+            if (appState.playerHp <= 0) {
+                appState.playerHp = 0;
+                renderGameStage();
+                setTimeout(() => {
+                    document.getElementById('game-over-overlay').classList.remove('hidden');
+                }, 400);
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('level-complete-overlay').classList.add('hidden');
+            appState.playerMaxHp += 15;
+            appState.playerHp = appState.playerMaxHp;
+            spawnLevel(appState.gameLevel + 1);
+        }
+
+        function restartGame() {
+            document.getElementById('game-over-overlay').classList.add('hidden');
+            appState.playerMaxHp = 100;
+            appState.playerHp = 100;
+            appState.combatLog = [];
+            spawnLevel(1);
+        }
+
+        function logCombat(msg, type) {
+            appState.combatLog.unshift({ msg, type });
+            if (appState.combatLog.length > 20) appState.combatLog.pop();
+            saveState();
+            restoreCombatLog();
+        }
+
+        function restoreCombatLog() {
+            const container = document.getElementById('combat-log-container');
+            container.innerHTML = '';
+            appState.combatLog.forEach(item => {
+                const el = document.createElement('div');
+                let color = 'text-slate-300';
+                if (item.type === 'player-dmg') color = 'text-blue-400';
+                if (item.type === 'player-heal') color = 'text-emerald-400 font-bold';
+                if (item.type === 'enemy-dmg') color = 'text-red-400 font-bold';
+                if (item.type === 'system') color = 'text-amber-300';
+
+                el.className = color;
+                el.textContent = item.msg;
+                container.appendChild(el);
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('leren-points-display').textContent = appState.points;
+            document.getElementById('nav-points-badge').textContent = `${appState.points} pt`;
+            document.getElementById('game-points-display').textContent = appState.points;
+            document.getElementById('game-level-num').textContent = appState.gameLevel;
+
+            renderCourses();
+            renderGameStage();
+        }
+
+        // --- INIT ON LOAD ---
+        window.onload = () => {
+            updateUI();
+        };
+
+    </script>
+</body>
+</html>
