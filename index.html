@@ -31,14 +31,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
         #drawCanvas { touch-action: none; cursor: crosshair; }
-        #gameCanvas { display: block; margin: 0 auto; border-radius: 0.5rem 0.5rem 0 0; }
         .theory-content h3 { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem; }
         .theory-content p { margin-bottom: 1rem; color: #475569; line-height: 1.6; }
         .theory-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; color: #475569; }
         
         .forest-bg {
             background: linear-gradient(to bottom, #0f172a 0%, #064e3b 100%);
-            overflow: hidden;
         }
         .forest-bg::before {
             content: '';
@@ -48,163 +46,159 @@
             background-size: cover;
             background-position: bottom;
             background-repeat: no-repeat;
+            pointer-events: none;
         }
     </style>
 </head>
 <body class="text-slate-800 flex flex-col min-h-screen relative">
 
-    <header id="mainAppHeader" class="bg-white shadow-sm sticky top-0 z-50 transition-all">
+    <header id="mainAppHeader" class="bg-white shadow-sm sticky top-0 z-40 transition-all">
         <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
                 <div class="w-10 h-10 bg-art-500 rounded-lg flex items-center justify-center text-white text-xl shadow-md">
                     <i class="fa-solid fa-palette"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Kunst Academie</h1>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight hidden sm:block"><span class="text-art-600">Kunst</span> Academie</h1>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="bg-amber-100 text-amber-700 px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-sm border border-amber-200 transition-transform" id="scoreContainer">
-                    <i class="fa-solid fa-star"></i>
-                    <span id="scoreDisplay">0</span> Punten
+            <div class="flex gap-1 sm:gap-2 bg-[#0f172a] p-1 rounded-xl border border-slate-700 items-center">
+                <button onclick="navigate('home')" class="px-3 sm:px-4 py-2 rounded-lg font-medium text-slate-300 hover:bg-slate-800 transition flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-book-open"></i> <span class="hidden sm:inline">Leren</span>
+                </button>
+                <div class="px-3 sm:px-4 py-2 rounded-lg font-bold bg-purple-600 text-white flex items-center gap-1 sm:gap-2 shadow text-sm sm:text-base" title="Monsters Verslagen">
+                    <i class="fa-solid fa-skull"></i> <span id="monsterScoreDisplay">0</span>
                 </div>
+                <div id="scoreContainer" class="px-3 sm:px-4 py-2 rounded-lg font-bold bg-teal-500 text-slate-900 flex items-center gap-1 sm:gap-2 shadow text-sm sm:text-base transition-transform duration-300" title="Leerpunten voor aanvallen">
+                    <i class="fa-solid fa-star"></i> <span class="bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded-full text-xs font-bold"><span id="scoreDisplay">0</span> pt</span>
+                </div>
+                <button onclick="navigate('game')" class="px-3 sm:px-4 py-2 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white transition flex items-center gap-2 text-sm sm:text-base shadow-md">
+                    <i class="fa-solid fa-gamepad"></i> <span class="hidden sm:inline">Spelen</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow w-full max-w-6xl mx-auto px-4 py-8 relative">
-        
-        <!-- HOME VIEW -->
-        <div id="view-home" class="view-section fade-in">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-                <h2 class="text-2xl font-bold mb-4">Beeldende Middelen</h2>
-                <p class="text-slate-600 mb-2">Kies een onderwerp, bestudeer de theorie op jouw niveau (Beginner, Gevorderd, Expert), lever tekeningen in en maak de quizzen voor punten!</p>
+    <main class="flex-grow relative flex flex-col">
+        <div id="view-home" class="max-w-6xl mx-auto w-full px-4 py-8 fade-in flex-grow">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Ontdek je Innerlijke <span class="text-art-500">Kunstenaar</span></h2>
+                <p class="text-lg text-slate-600">Leer de 5 basisvaardigheden van beeldende kunst, verzamel punten en versla monsters in de arena!</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="moduleGrid"></div>
-
-            <div class="mt-12 mb-4 flex items-center gap-4">
-                <hr class="flex-grow border-slate-200">
-                <span class="text-slate-400 font-medium uppercase text-sm tracking-wider">Ontspanning</span>
-                <hr class="flex-grow border-slate-200">
-            </div>
-
-            <!-- Game Card -->
-            <div class="bg-gradient-to-br from-green-700 to-emerald-900 rounded-2xl p-6 text-white shadow-lg cursor-pointer transform transition hover:-translate-y-1 hover:shadow-xl flex items-center justify-between" onclick="navigate('game')">
-                <div>
-                    <h3 class="text-2xl font-bold mb-2">Zombie Bos Survival</h3>
-                    <p class="text-green-100">Beantwoord kunstvragen (4 opties) om zombies neer te schieten!</p>
-                </div>
-                <div class="text-5xl opacity-80"><i class="fa-solid fa-tree"></i></div>
-            </div>
+            <div id="moduleGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- MODULE VIEW -->
-        <div id="view-module" class="view-section hidden">
-            <button onclick="navigate('home')" class="mb-4 text-slate-500 hover:text-art-600 font-medium flex items-center gap-2 transition">
+        <div id="view-module" class="hidden max-w-4xl mx-auto w-full px-4 py-8 fade-in flex-grow flex flex-col">
+            <button onclick="navigate('home')" class="text-slate-500 hover:text-slate-800 mb-6 font-medium flex items-center gap-2 transition w-fit">
                 <i class="fa-solid fa-arrow-left"></i> Terug naar overzicht
             </button>
-
-            <!-- Level Selector -->
-            <div class="mb-6 flex gap-2 overflow-x-auto pb-2" id="levelTabs">
-                <button onclick="setLevel(0)" class="lvl-btn px-4 py-2 rounded-full text-sm font-bold bg-art-500 text-white shadow">Niveau 1: Beginner</button>
-                <button onclick="setLevel(1)" class="lvl-btn px-4 py-2 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-50">Niveau 2: Gevorderd</button>
-                <button onclick="setLevel(2)" class="lvl-btn px-4 py-2 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-50">Niveau 3: Expert</button>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
-                
-                <!-- Sidebar / Tabs -->
-                <div class="w-full md:w-56 bg-slate-50 border-r border-slate-100 flex flex-row md:flex-col p-4 gap-2 overflow-x-auto md:overflow-visible">
-                    <h2 id="modTitle" class="text-xl font-bold px-2 py-2 hidden md:block text-slate-800">Titel</h2>
-                    <button onclick="switchTab('theory')" id="tab-theory" class="tab-btn flex-1 md:flex-none text-left px-4 py-3 rounded-lg font-medium transition bg-white shadow-sm text-art-600 flex items-center gap-3"><i class="fa-solid fa-book-open w-5 text-center"></i> Theorie</button>
-                    <button onclick="switchTab('draw')" id="tab-draw" class="tab-btn flex-1 md:flex-none text-left px-4 py-3 rounded-lg font-medium transition text-slate-600 hover:bg-slate-100 flex items-center gap-3"><i class="fa-solid fa-paintbrush w-5 text-center"></i> Tekenen</button>
-                    <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn flex-1 md:flex-none text-left px-4 py-3 rounded-lg font-medium transition text-slate-600 hover:bg-slate-100 flex items-center gap-3"><i class="fa-solid fa-circle-question w-5 text-center"></i> Quiz (5)</button>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-grow">
+                <div class="p-6 md:p-8 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+                    <h2 id="modTitle" class="text-3xl font-bold text-slate-800">Module Naam</h2>
+                    <div class="flex gap-2 bg-white p-1 rounded-full border border-slate-200 shadow-sm overflow-x-auto w-full sm:w-auto">
+                        <button class="lvl-btn px-4 py-2 rounded-full text-sm font-bold text-white shadow bg-blue-500 shrink-0" onclick="setLevel(0)">Beginner</button>
+                        <button class="lvl-btn px-4 py-2 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 shrink-0" onclick="setLevel(1)">Gevorderd</button>
+                        <button class="lvl-btn px-4 py-2 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 shrink-0" onclick="setLevel(2)">Expert</button>
+                    </div>
                 </div>
-
-                <!-- Content Area -->
-                <div class="flex-grow p-6 relative">
-                    <!-- Theory -->
-                    <div id="content-theory" class="tab-content theory-content max-w-3xl"></div>
-
-                    <!-- Draw -->
-                    <div id="content-draw" class="tab-content hidden h-full flex flex-col">
-                        <h3 class="text-2xl font-bold mb-2">Tekenopdracht</h3>
-                        <p id="drawPrompt" class="text-slate-600 mb-4 bg-slate-100 p-3 rounded-lg border-l-4 border-art-500"></p>
-                        <div class="flex flex-wrap gap-4 mb-4 items-center bg-white p-2 rounded-lg border shadow-sm">
-                            <input type="color" id="brushColor" value="#1e293b" class="w-10 h-10 rounded cursor-pointer border-0 p-0">
-                            <input type="range" id="brushSize" min="1" max="20" value="5" class="w-32 accent-art-500">
-                            <button onclick="clearCanvas()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition text-sm font-medium"><i class="fa-solid fa-trash mr-1"></i> Wis</button>
-                            <button onclick="submitDrawing()" class="ml-auto px-6 py-2 bg-art-600 hover:bg-art-700 text-white rounded-md transition shadow-md font-bold">Inleveren (+1 pt)</button>
+                <div class="flex border-b border-slate-200 shrink-0">
+                    <button id="tab-theory" onclick="switchTab('theory')" class="tab-btn flex-1 py-4 font-semibold text-art-600 bg-white border-b-2 border-art-500 transition"><i class="fa-solid fa-book-open mr-2"></i>Theorie</button>
+                    <button id="tab-draw" onclick="switchTab('draw')" class="tab-btn flex-1 py-4 font-semibold text-slate-600 hover:bg-slate-50 transition"><i class="fa-solid fa-paintbrush mr-2"></i>Tekenen</button>
+                    <button id="tab-quiz" onclick="switchTab('quiz')" class="tab-btn flex-1 py-4 font-semibold text-slate-600 hover:bg-slate-50 transition"><i class="fa-solid fa-list-check mr-2"></i>Quiz</button>
+                </div>
+                <div class="p-6 md:p-8 flex-grow flex flex-col relative">
+                    
+                    <!-- Theory Tab -->
+                    <div id="content-theory" class="tab-content theory-content fade-in"></div>
+                    
+                    <!-- Draw Tab -->
+                    <div id="content-draw" class="tab-content hidden fade-in flex flex-col h-full min-h-[400px]">
+                        <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 shrink-0">
+                            <h4 class="font-bold text-blue-800 mb-1 flex items-center gap-2"><i class="fa-solid fa-pencil"></i> Opdracht:</h4>
+                            <p id="drawPrompt" class="text-blue-900 text-sm"></p>
                         </div>
-                        <div class="flex-grow border-2 border-slate-200 rounded-xl overflow-hidden bg-white shadow-inner min-h-[400px] relative">
-                            <canvas id="drawCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                        <div class="flex gap-4 mb-4 shrink-0 flex-wrap">
+                            <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">
+                                <label class="text-sm font-bold text-slate-600"><i class="fa-solid fa-palette mr-1"></i>Kleur:</label>
+                                <input type="color" id="brushColor" value="#1e293b" class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+                            </div>
+                            <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">
+                                <label class="text-sm font-bold text-slate-600"><i class="fa-solid fa-brush mr-1"></i>Dikte:</label>
+                                <input type="range" id="brushSize" min="1" max="20" value="3" class="w-24 accent-art-500">
+                            </div>
+                            <button onclick="clearCanvas()" class="ml-auto px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm transition"><i class="fa-solid fa-eraser mr-2"></i>Wissen</button>
+                        </div>
+                        <div class="flex-grow border-2 border-slate-200 rounded-xl overflow-hidden bg-white shadow-inner relative touch-none">
+                            <canvas id="drawCanvas" class="absolute inset-0 w-full h-full cursor-crosshair touch-none"></canvas>
+                        </div>
+                        <button onclick="submitDrawing()" class="mt-4 w-full py-3 bg-art-500 hover:bg-art-600 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 shrink-0">
+                            <i class="fa-solid fa-paper-plane"></i> Tekening Inleveren (+1 Punt)
+                        </button>
+                    </div>
+                    
+                    <!-- Quiz Tab -->
+                    <div id="content-quiz" class="tab-content hidden fade-in max-w-2xl mx-auto w-full">
+                        <div id="quizContainer">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-xl text-slate-800">Test je kennis</h3>
+                                <span id="quizProgress" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-bold border border-slate-200">Vraag 1/5</span>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6">
+                                <p id="quizQuestion" class="text-lg font-medium text-slate-800 mb-0"></p>
+                            </div>
+                            <div id="quizOptions" class="space-y-3"></div>
+                            <div id="quizFeedback" class="hidden mt-6 p-4 rounded-lg font-medium text-center"></div>
+                            <button id="nextQuizBtn" onclick="nextQuizQuestion()" class="hidden mt-6 w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow transition">Volgende Vraag <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                        </div>
+                        <div id="quizResults" class="hidden text-center py-10">
+                            <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                                <i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Quiz Voltooid!</h3>
+                            <p class="text-slate-600 mb-6">Je score is <span id="quizScoreText" class="font-bold text-slate-800"></span></p>
+                            <button onclick="switchTab('theory')" class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition">Terug naar theorie</button>
                         </div>
                     </div>
 
-                    <!-- Quiz -->
-                    <div id="content-quiz" class="tab-content hidden">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-2xl font-bold">Kennis Quiz</h3>
-                            <span id="quizProgress" class="text-sm font-bold bg-slate-100 px-3 py-1 rounded-full text-slate-600">Vraag 1/5</span>
-                        </div>
-                        <div id="quizContainer" class="max-w-2xl bg-slate-50 p-6 rounded-xl border border-slate-100 shadow-sm">
-                            <p id="quizQuestion" class="text-lg font-semibold text-slate-800 mb-6"></p>
-                            <div id="quizOptions" class="flex flex-col gap-3"></div>
-                            <div id="quizFeedback" class="mt-6 hidden p-4 rounded-lg font-medium text-center"></div>
-                            <button id="nextQuizBtn" onclick="nextQuizQuestion()" class="mt-4 hidden w-full py-3 bg-art-600 hover:bg-art-700 text-white rounded-lg font-bold transition">Volgende Vraag</button>
-                        </div>
-                        <div id="quizResults" class="hidden max-w-2xl text-center bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-                            <i class="fa-solid fa-trophy text-6xl text-amber-400 mb-4"></i>
-                            <h3 class="text-2xl font-bold mb-2">Quiz Voltooid!</h3>
-                            <p class="text-lg text-slate-600 mb-4">Je hebt <span id="quizScoreText" class="font-bold text-art-600"></span> vragen goed.</p>
-                            <button onclick="navigate('home')" class="px-6 py-2 bg-slate-800 text-white rounded-lg font-bold">Terug naar menu</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- GAME VIEW (RPG) -->
-        <div id="view-game" class="view-section hidden fixed inset-0 z-[100] bg-[#0f172a] text-slate-200 h-[100dvh] w-full flex flex-col overflow-y-auto">
-            
-            <!-- Custom Dark Game Header -->
-            <header class="bg-[#1e293b] border-b border-slate-700 p-4 flex flex-wrap gap-4 justify-between items-center shadow-md relative z-20 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center text-white text-xl shadow-md">
-                        <i class="fa-solid fa-palette"></i>
+        <div id="view-game" class="hidden fixed top-0 left-0 h-[100dvh] w-full z-50 bg-[#0f172a] overflow-y-auto overflow-x-hidden">
+            <header class="bg-[#111827] shadow-md sticky top-0 z-50 border-b border-slate-800 shrink-0">
+                <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <button onclick="navigate('home')" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center text-slate-300 transition border border-slate-700">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="text-white font-bold text-lg hidden sm:block">Arena</h2>
                     </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-teal-400 leading-tight">Kunst Academie</h1>
-                        <p class="text-xs text-slate-400 hidden sm:block">Interactief Leer- & Spelplatform</p>
-                    </div>
-                </div>
-                <div class="flex gap-2 bg-[#0f172a] p-1 rounded-xl border border-slate-700">
-                    <button onclick="navigate('home')" class="px-4 py-2 rounded-lg font-medium text-slate-300 hover:bg-slate-800 transition flex items-center gap-2">
-                        <i class="fa-solid fa-book-open"></i> Leren
-                    </button>
-                    <div class="px-4 py-2 rounded-lg font-bold bg-teal-500 text-slate-900 flex items-center gap-2 shadow">
-                        <i class="fa-solid fa-khanda"></i> Spel <span class="bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full text-xs ml-1" id="gameHeaderScore">0 pt</span>
+                    <div class="flex gap-2">
+                        <div class="px-3 sm:px-4 py-2 rounded-lg font-bold bg-purple-600 text-white flex items-center gap-1 sm:gap-2 shadow border border-purple-500 text-sm sm:text-base">
+                            <i class="fa-solid fa-skull"></i> <span id="monsterScoreDisplayGame">0</span>
+                        </div>
+                        <div class="px-3 sm:px-4 py-2 rounded-lg font-bold bg-slate-800 text-slate-300 flex items-center gap-1 sm:gap-2 shadow border border-slate-700 text-sm sm:text-base">
+                            <i class="fa-solid fa-star text-amber-400"></i> <span id="gameHeaderScoreGame">0 pt</span>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Battle Arena -->
-            <div class="flex-grow forest-bg relative flex flex-col justify-start md:justify-center p-4 md:p-8 pb-16">
+            <div class="forest-bg relative flex flex-col justify-start md:justify-center p-4 md:p-8 min-h-[calc(100dvh-64px)] pb-16">
                 <!-- Fighters -->
                 <div class="flex justify-between items-center max-w-4xl mx-auto w-full mt-4 md:mt-10 relative z-10 shrink-0">
                     
                     <!-- Player Card -->
                     <div class="flex flex-col items-center gap-4">
-                        <div class="bg-[#1e293b] border border-slate-700 rounded-xl p-3 w-40 md:w-48 shadow-lg">
-                            <div class="flex justify-between text-sm font-bold mb-1">
+                        <div class="bg-[#1e293b] border border-slate-700 rounded-xl p-3 w-32 sm:w-40 md:w-48 shadow-lg">
+                            <div class="flex justify-between text-xs sm:text-sm font-bold mb-1 text-slate-200">
                                 <span><i class="fa-solid fa-user text-teal-400 mr-1 hidden sm:inline"></i> Jij</span>
                                 <span id="playerHpText">100/100</span>
                             </div>
-                            <div class="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-900">
+                            <div class="h-2.5 sm:h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-900">
                                 <div id="playerHpBar" class="h-full bg-teal-500 w-full transition-all duration-300"></div>
                             </div>
                         </div>
                         <div class="relative">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-teal-900/40 border-2 border-teal-500/50 rounded-3xl flex items-center justify-center text-5xl md:text-7xl shadow-[0_0_15px_rgba(20,184,166,0.2)]">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-teal-900/40 border-2 border-teal-500/50 rounded-2xl sm:rounded-3xl flex items-center justify-center text-4xl sm:text-5xl md:text-7xl shadow-[0_0_15px_rgba(20,184,166,0.2)]">
                                 🧑‍🎨
                             </div>
                             <div class="absolute -bottom-2 -right-2 bg-amber-400 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-lg md:text-xl shadow-lg border-2 border-[#0f172a]">
@@ -214,19 +208,19 @@
                     </div>
 
                     <!-- Enemy Card -->
-                    <div class="flex flex-col items-center gap-4 mt-16 md:mt-24">
-                        <div class="bg-[#1e293b] border-2 border-red-500/50 rounded-xl p-3 w-40 md:w-48 shadow-lg relative">
-                            <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow">Doelwit</div>
-                            <div class="flex justify-between text-sm font-bold mb-1">
-                                <span id="enemyNameDisplay" class="truncate mr-2">Verf-Knoeier</span>
+                    <div class="flex flex-col items-center gap-4 mt-12 sm:mt-16 md:mt-24">
+                        <div class="bg-[#1e293b] border-2 border-red-500/50 rounded-xl p-3 w-32 sm:w-40 md:w-48 shadow-lg relative">
+                            <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow whitespace-nowrap">Doelwit</div>
+                            <div class="flex justify-between text-xs sm:text-sm font-bold mb-1 text-slate-200">
+                                <span id="enemyNameDisplay" class="truncate mr-2">Lvl 1 Monster</span>
                                 <span id="enemyHpText">36/36</span>
                             </div>
-                            <div class="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-900">
+                            <div class="h-2.5 sm:h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-900">
                                 <div id="enemyHpBar" class="h-full bg-red-500 w-full transition-all duration-300"></div>
                             </div>
                         </div>
                         <div class="relative">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-red-900/20 border-2 border-red-500/30 rounded-3xl flex items-center justify-center text-5xl md:text-7xl animate-pulse">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-red-900/20 border-2 border-red-500/30 rounded-2xl sm:rounded-3xl flex items-center justify-center text-4xl sm:text-5xl md:text-7xl animate-pulse">
                                 <span id="enemyEmoji">🧟</span>
                             </div>
                         </div>
@@ -235,44 +229,43 @@
                 </div>
 
                 <!-- Action Panel -->
-                <div class="bg-[#111827]/95 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 md:p-6 max-w-4xl mx-auto w-full relative z-10 shadow-2xl mt-8">
+                <div class="bg-[#111827]/95 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 md:p-6 max-w-4xl mx-auto w-full relative z-10 shadow-2xl mt-8 mb-8 shrink-0">
                     <div class="flex justify-between items-center mb-4 md:mb-6">
                         <span id="turnIndicator" class="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner transition-colors">Jouw Beurt!</span>
                         <span class="text-slate-400 text-xs md:text-sm">Kies een actie met je punten</span>
                     </div>
 
                     <!-- Buttons -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+                    <div class="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 sm:grid-cols-4">
                         <button onclick="doAction('zwak')" class="battle-btn group bg-[#1e293b] hover:bg-slate-700 border border-slate-600 rounded-xl p-3 md:p-4 text-left transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <div class="font-bold text-base md:text-lg mb-1 group-hover:text-white transition"><i class="fa-solid fa-khanda text-slate-400 mr-2"></i>Zwak</div>
-                            <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">Kleine schade</div>
-                            <div class="inline-block bg-slate-800 text-amber-400 text-xs font-bold px-2 py-1 rounded border border-slate-700">1 pt</div>
+                            <div class="font-bold text-sm sm:text-base md:text-lg mb-1 text-slate-200 group-hover:text-white transition"><i class="fa-solid fa-khanda text-slate-400 mr-2"></i>Zwak</div>
+                            <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">10-15 DMG</div>
+                            <div class="inline-block bg-slate-800 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-1 rounded border border-slate-700">1 pt</div>
                         </button>
                         <button onclick="doAction('schild')" class="battle-btn group bg-[#1e293b] hover:bg-slate-700 border border-slate-600 rounded-xl p-3 md:p-4 text-left transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <div class="font-bold text-base md:text-lg mb-1 group-hover:text-white transition"><i class="fa-solid fa-shield-halved text-slate-400 mr-2"></i>Schild</div>
-                            <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">Blokkeer aanval</div>
-                            <div class="inline-block bg-slate-800 text-amber-400 text-xs font-bold px-2 py-1 rounded border border-slate-700">2 pt</div>
+                            <div class="font-bold text-sm sm:text-base md:text-lg mb-1 text-slate-200 group-hover:text-white transition"><i class="fa-solid fa-shield-halved text-slate-400 mr-2"></i>Schild</div>
+                            <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">Blokkeer 2x</div>
+                            <div class="inline-block bg-slate-800 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-1 rounded border border-slate-700">2 pt</div>
                         </button>
                         <button onclick="doAction('sterk')" class="battle-btn group bg-[#1e293b] hover:bg-slate-700 border border-slate-600 rounded-xl p-3 md:p-4 text-left transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <div class="font-bold text-base md:text-lg mb-1 group-hover:text-white transition"><i class="fa-solid fa-burst text-amber-500 mr-2"></i>Sterk</div>
-                            <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">Grote schade</div>
-                            <div class="inline-block bg-slate-800 text-amber-400 text-xs font-bold px-2 py-1 rounded border border-slate-700">3 pt</div>
+                            <div class="font-bold text-sm sm:text-base md:text-lg mb-1 text-slate-200 group-hover:text-white transition"><i class="fa-solid fa-burst text-amber-500 mr-2"></i>Sterk</div>
+                            <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">25-35 DMG</div>
+                            <div class="inline-block bg-slate-800 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-1 rounded border border-slate-700">3 pt</div>
                         </button>
                         <button onclick="doAction('heal')" class="battle-btn group bg-[#1e293b] hover:bg-slate-700 border border-slate-600 rounded-xl p-3 md:p-4 text-left transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <div class="font-bold text-base md:text-lg mb-1 group-hover:text-white transition"><i class="fa-solid fa-heart text-pink-500 mr-2"></i>Heal</div>
+                            <div class="font-bold text-sm sm:text-base md:text-lg mb-1 text-slate-200 group-hover:text-white transition"><i class="fa-solid fa-heart text-pink-500 mr-2"></i>Heal</div>
                             <div class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3">+30 HP Herstel</div>
-                            <div class="inline-block bg-slate-800 text-amber-400 text-xs font-bold px-2 py-1 rounded border border-slate-700">5 pt</div>
+                            <div class="inline-block bg-slate-800 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-1 rounded border border-slate-700">5 pt</div>
                         </button>
                     </div>
 
                     <!-- Battle Log -->
-                    <div id="battleLog" class="bg-[#0b1120] border border-slate-800 rounded-xl p-4 h-28 md:h-32 overflow-y-auto font-mono text-xs md:text-sm text-green-400 shadow-inner">
-                        <div class="text-amber-500 mb-2">--- BOS ZONE LEVEL 1 ---</div>
+                    <div id="battleLog" class="bg-[#0b1120] border border-slate-800 rounded-xl p-3 sm:p-4 h-24 sm:h-28 md:h-32 overflow-y-auto font-mono text-[10px] sm:text-xs md:text-sm text-green-400 shadow-inner flex flex-col space-y-1">
+                        <div class="text-amber-500 font-bold">--- BOS ZONE LEVEL 1 ---</div>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
 
     <script>
@@ -531,15 +524,26 @@
         let activeTab = 'theory';
         let theoryTimer = null;
 
-        // Quiz state
         let quizCurrentQ = 0;
         let quizCorrectAnswers = 0;
         let activeQuestions = [];
+        let views = {};
 
-        const views = { home: document.getElementById('view-home'), module: document.getElementById('view-module'), game: document.getElementById('view-game') };
-        const scoreDisplay = document.getElementById('scoreDisplay');
-
-        function initApp() { updateScoreDisplay(); renderHomeModules(); }
+        function initApp() { 
+            // Fix: Connect views once the entire HTML is loaded to prevent null errors
+            views = { 
+                home: document.getElementById('view-home'), 
+                module: document.getElementById('view-module'), 
+                game: document.getElementById('view-game') 
+            };
+            updateScoreDisplay(); 
+            renderHomeModules(); 
+            
+            // Start met canvas setup event listener
+            window.addEventListener('resize', () => { 
+                if(views.module && !views.module.classList.contains('hidden')) resizeCanvas(); 
+            });
+        }
 
         function updateScore(points) {
             globalScore += points;
@@ -547,17 +551,35 @@
             updateScoreDisplay();
             
             const sc = document.getElementById('scoreContainer');
-            sc.classList.add('scale-110', 'bg-green-100', 'text-green-700', 'border-green-300');
-            setTimeout(() => { sc.classList.remove('scale-110', 'bg-green-100', 'text-green-700', 'border-green-300'); }, 400);
+            if(sc) {
+                sc.classList.add('scale-110', 'bg-green-100', 'text-green-700', 'border-green-300');
+                setTimeout(() => { sc.classList.remove('scale-110', 'bg-green-100', 'text-green-700', 'border-green-300'); }, 400);
+            }
         }
-        function updateScoreDisplay() { scoreDisplay.innerText = globalScore; }
+        
+        function updateScoreDisplay() { 
+            const display = document.getElementById('scoreDisplay');
+            if(display) display.innerText = globalScore; 
+            updateGameHeaderScore();
+        }
+
+        function updateGameHeaderScore() {
+            const text = globalScore + " pt";
+            const el1 = document.getElementById('gameHeaderScore');
+            if(el1) el1.innerText = text;
+            const el2 = document.getElementById('gameHeaderScoreGame');
+            if(el2) el2.innerText = text;
+        }
 
         function navigate(viewName, moduleId = null) {
-            Object.values(views).forEach(v => v.classList.add('hidden'));
+            if(!views || !views[viewName]) return; // Failsafe
+            
+            Object.values(views).forEach(v => {
+                if(v) v.classList.add('hidden');
+            });
             views[viewName].classList.remove('hidden');
             window.scrollTo(0, 0);
 
-            // Toggle Main Header Visibility
             const mainHeader = document.getElementById('mainAppHeader');
             if(viewName === 'game') {
                 if(mainHeader) mainHeader.classList.add('hidden');
@@ -567,13 +589,14 @@
             }
 
             if (viewName === 'module' && moduleId) {
-                currentLevelIndex = 0; // reset to beginner
+                currentLevelIndex = 0;
                 loadModule(moduleId);
             }
         }
 
         function renderHomeModules() {
             const grid = document.getElementById('moduleGrid');
+            if(!grid) return;
             grid.innerHTML = '';
             modulesData.forEach(mod => {
                 const card = document.createElement('div');
@@ -620,7 +643,6 @@
         }
 
         function updateLevelUI() {
-            // Update tabs visually
             document.querySelectorAll('.lvl-btn').forEach((btn, idx) => {
                 if(idx === currentLevelIndex) {
                     btn.className = `lvl-btn px-4 py-2 rounded-full text-sm font-bold text-white shadow ${currentModule.color}`;
@@ -631,15 +653,14 @@
 
             const levelData = currentModule.levels[currentLevelIndex];
             
-            // Theory
             document.getElementById('content-theory').innerHTML = levelData.theory;
-            
-            // Draw
             document.getElementById('drawPrompt').innerText = levelData.drawPrompt;
-            clearCanvas();
-            setTimeout(resizeCanvas, 100);
+            
+            if(activeTab === 'draw') {
+                clearCanvas();
+                setTimeout(resizeCanvas, 100);
+            }
 
-            // Quiz reset
             activeQuestions = levelData.quiz;
             startQuiz();
             
@@ -655,12 +676,18 @@
                 b.classList.add('text-slate-600', 'hover:bg-slate-100');
             });
             const activeBtn = document.getElementById(`tab-${tabId}`);
-            activeBtn.classList.add('bg-white', 'shadow-sm', 'text-art-600');
-            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            if(activeBtn) {
+                activeBtn.classList.add('bg-white', 'shadow-sm', 'text-art-600');
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            }
 
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`content-${tabId}`).classList.remove('hidden');
-            if(tabId === 'draw') resizeCanvas();
+            const contentPane = document.getElementById(`content-${tabId}`);
+            if(contentPane) contentPane.classList.remove('hidden');
+            
+            if(tabId === 'draw') {
+                setTimeout(resizeCanvas, 50); // geef DOM tijd om te openen
+            }
             
             if (tabId === 'theory') {
                 startTheoryTimer();
@@ -743,10 +770,8 @@
             resDiv.classList.remove('hidden');
             document.getElementById('quizScoreText').innerText = `${quizCorrectAnswers} van de 5`;
             
-            // Calculate points: 3 points per correct answer
             const pointsEarned = quizCorrectAnswers * 3;
             if(pointsEarned > 0) {
-                // Prevent endless farming on same level
                 const completionKey = `completed_${currentModule.id}_lvl_${currentLevelIndex}`;
                 if(!currentModule[completionKey]) {
                     updateScore(pointsEarned);
@@ -758,59 +783,111 @@
             }
         }
 
-        const canvas = document.getElementById('drawCanvas');
-        const ctx = canvas.getContext('2d');
         let isDrawing = false;
         let lastX = 0, lastY = 0;
+        let ctx = null;
+        let canvasEl = null;
+
+        function initCanvasVars() {
+            if(!canvasEl) {
+                canvasEl = document.getElementById('drawCanvas');
+                if(canvasEl) ctx = canvasEl.getContext('2d');
+            }
+            return canvasEl && ctx;
+        }
 
         function resizeCanvas() {
-            const rect = canvas.parentElement.getBoundingClientRect();
+            if(!initCanvasVars()) return;
+            const container = canvasEl.parentElement;
+            if(!container) return;
+            
+            const rect = container.getBoundingClientRect();
+            if(rect.width === 0 || rect.height === 0) return; // nog niet zichtbaar
+
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-            if(canvas.width > 0) tempCtx.drawImage(canvas, 0, 0);
+            tempCanvas.width = canvasEl.width; 
+            tempCanvas.height = canvasEl.height;
+            if(canvasEl.width > 0 && canvasEl.height > 0) {
+                tempCtx.drawImage(canvasEl, 0, 0);
+            }
 
-            canvas.width = rect.width; canvas.height = rect.height;
-            ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            if(tempCanvas.width > 0) ctx.drawImage(tempCanvas, 0, 0);
+            canvasEl.width = rect.width; 
+            canvasEl.height = rect.height;
+            
+            ctx.fillStyle = "white"; 
+            ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+            
+            if(tempCanvas.width > 0 && tempCanvas.height > 0) {
+                ctx.drawImage(tempCanvas, 0, 0);
+            }
         }
-        window.addEventListener('resize', () => { if(!document.getElementById('view-module').classList.contains('hidden')) resizeCanvas(); });
 
         function getMousePos(e) {
-            const rect = canvas.getBoundingClientRect();
+            const rect = canvasEl.getBoundingClientRect();
             return {
                 x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
                 y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
             };
         }
-        function startDrawing(e) { e.preventDefault(); isDrawing = true; const pos = getMousePos(e); [lastX, lastY] = [pos.x, pos.y]; }
+
+        function startDrawing(e) { 
+            if(!initCanvasVars()) return;
+            e.preventDefault(); 
+            isDrawing = true; 
+            const pos = getMousePos(e); 
+            [lastX, lastY] = [pos.x, pos.y]; 
+        }
+
         function draw(e) {
-            if (!isDrawing) return; e.preventDefault(); const pos = getMousePos(e);
-            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y);
+            if (!isDrawing || !initCanvasVars()) return; 
+            e.preventDefault(); 
+            const pos = getMousePos(e);
+            ctx.beginPath(); 
+            ctx.moveTo(lastX, lastY); 
+            ctx.lineTo(pos.x, pos.y);
             ctx.strokeStyle = document.getElementById('brushColor').value;
             ctx.lineWidth = document.getElementById('brushSize').value;
-            ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+            ctx.lineCap = 'round'; 
+            ctx.lineJoin = 'round'; 
+            ctx.stroke();
             [lastX, lastY] = [pos.x, pos.y];
         }
+
         function stopDrawing() { isDrawing = false; }
         
-        canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing);
-        canvas.addEventListener('touchstart', startDrawing, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', stopDrawing);
+        // Attach events after full load so element definitely exists
+        window.addEventListener('DOMContentLoaded', () => {
+            const c = document.getElementById('drawCanvas');
+            if(c) {
+                c.addEventListener('mousedown', startDrawing); 
+                c.addEventListener('mousemove', draw);
+                c.addEventListener('mouseup', stopDrawing); 
+                c.addEventListener('mouseout', stopDrawing);
+                c.addEventListener('touchstart', startDrawing, {passive: false}); 
+                c.addEventListener('touchmove', draw, {passive: false}); 
+                c.addEventListener('touchend', stopDrawing);
+            }
+        });
 
-        function clearCanvas() { ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-        function submitDrawing() {
-            const drawKey = `draw_${currentModule.id}_lvl_${currentLevelIndex}`;
-            if(!currentModule[drawKey]) {
-                updateScore(1); currentModule[drawKey] = true;
-                alert("Tekening ingeleverd! +1 punt.");
-            } else { alert("Opdracht al ingeleverd, maar goed geoefend!"); }
+        function clearCanvas() { 
+            if(!initCanvasVars()) return;
+            ctx.fillStyle = "white"; 
+            ctx.fillRect(0, 0, canvasEl.width, canvasEl.height); 
         }
 
-        // ==========================================
-        // NIEUW RPG SPEL LOGICA
-        // ==========================================
-        
+        function submitDrawing() {
+            if(!currentModule) return;
+            const drawKey = `draw_${currentModule.id}_lvl_${currentLevelIndex}`;
+            if(!currentModule[drawKey]) {
+                updateScore(1); 
+                currentModule[drawKey] = true;
+                alert("Tekening ingeleverd! +1 punt.");
+            } else { 
+                alert("Opdracht al ingeleverd, maar goed geoefend!"); 
+            }
+        }
+
         let playerMaxHP = 100;
         let playerHP = 100;
         let playerShield = 0;
@@ -821,36 +898,58 @@
             { name: 'Canvas-Monster', maxHp: 75, emoji: '👹', atk: 16 }
         ];
         
-        let currentEnemyLevel = 0;
+        let monstersDefeated = 0;
+        let currentStage = 1;
+        let enemyIndex = 0;
+        
+        let enemyMaxHP = 36;
         let enemyHP = 36;
-        let isPlayerTurn = true;
+        let currentEnemyAtk = 8;
+        let isPlayerTurn = true; // Fix voor de ReferenceError
 
         function initRPG() {
-            currentEnemyLevel = 0;
+            monstersDefeated = 0;
+            currentStage = 1;
+            enemyIndex = 0;
             playerHP = playerMaxHP;
+            isPlayerTurn = true;
+            
+            updateMonsterScore();
             updateGameHeaderScore();
-            document.getElementById('battleLog').innerHTML = ''; // clear log
-            logBattle(`--- BOS ZONE LEVEL ${currentEnemyLevel + 1} ---`, 'text-amber-500 font-bold');
+            document.getElementById('battleLog').innerHTML = ''; 
+            logBattle(`--- BOS ZONE LEVEL ${currentStage} ---`, 'text-amber-500 font-bold');
             spawnEnemy();
         }
 
+        function updateMonsterScore() {
+            const el1 = document.getElementById('monsterScoreDisplay');
+            if(el1) el1.innerText = monstersDefeated;
+            const el2 = document.getElementById('monsterScoreDisplayGame');
+            if(el2) el2.innerText = monstersDefeated;
+        }
+
         function spawnEnemy() {
-            const e = enemies[currentEnemyLevel];
-            enemyHP = e.maxHp;
-            document.getElementById('enemyNameDisplay').innerText = e.name;
-            document.getElementById('enemyEmoji').innerText = e.emoji;
+            const baseEnemy = enemies[enemyIndex];
+            
+            const hpMultiplier = 1 + ((currentStage - 1) * 0.4);
+            const atkMultiplier = 1 + ((currentStage - 1) * 0.3);
+            
+            enemyMaxHP = Math.floor(baseEnemy.maxHp * hpMultiplier);
+            enemyHP = enemyMaxHP;
+            currentEnemyAtk = Math.floor(baseEnemy.atk * atkMultiplier);
+            
+            document.getElementById('enemyNameDisplay').innerText = `Lvl ${currentStage} ${baseEnemy.name}`;
+            document.getElementById('enemyEmoji').innerText = baseEnemy.emoji;
+            
             isPlayerTurn = true;
             playerShield = 0;
             updateBattleUI();
             
-            document.getElementById('turnIndicator').innerText = "Jouw Beurt!";
-            document.getElementById('turnIndicator').className = "bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner";
-            logBattle(`Er verschijnt een wilde ${e.name}!`, 'text-slate-300');
-        }
-
-        function updateGameHeaderScore() {
-            const el = document.getElementById('gameHeaderScore');
-            if(el) el.innerText = globalScore + " pt";
+            const turnInd = document.getElementById('turnIndicator');
+            turnInd.innerText = "Jouw Beurt!";
+            turnInd.className = "bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner transition-colors";
+            
+            logBattle(`Er verschijnt een ${baseEnemy.name}! (HP: ${enemyMaxHP}, DMG: ~${currentEnemyAtk})`, 'text-slate-300');
         }
 
         function doAction(type) {
@@ -861,9 +960,9 @@
             let heal = 0;
             let actionName = "";
 
-            if(type === 'zwak') { cost = 1; dmg = Math.floor(Math.random() * 6) + 10; actionName = "Zwakke Aanval"; } // 10-15 damage
+            if(type === 'zwak') { cost = 1; dmg = Math.floor(Math.random() * 6) + 10; actionName = "Zwakke Aanval"; }
             if(type === 'schild') { cost = 2; playerShield = 2; actionName = "Schild"; }
-            if(type === 'sterk') { cost = 3; dmg = Math.floor(Math.random() * 11) + 25; actionName = "Sterke Aanval"; } // 25-35 damage
+            if(type === 'sterk') { cost = 3; dmg = Math.floor(Math.random() * 11) + 25; actionName = "Sterke Aanval"; }
             if(type === 'heal') { cost = 5; heal = 30; actionName = "Heal"; }
 
             if(globalScore < cost) {
@@ -871,25 +970,23 @@
                 return;
             }
 
-            // Deduct Points
             globalScore -= cost;
             localStorage.setItem('kunstAcademieScore', globalScore);
-            updateScoreDisplay(); // Update Main UI score
-            updateGameHeaderScore();
+            updateScoreDisplay(); 
 
             logBattle(`Jij gebruikt ${actionName} (-${cost} pt).`, 'text-teal-300');
 
             if(type === 'schild') {
-                logBattle("Je houdt je palet omhoog! Je blokkeert de volgende aanval.");
+                logBattle("Je houdt je palet omhoog! Je blokkeert de komende aanvallen.");
             }
 
             if(dmg > 0) {
                 enemyHP -= dmg;
-                logBattle(`${enemies[currentEnemyLevel].name} krijgt ${dmg} schade!`);
+                logBattle(`${enemies[enemyIndex].name} krijgt ${dmg} schade!`, 'text-white'); // Vaste bug: enemyIndex gebruikt
             }
             if(heal > 0) {
                 playerHP = Math.min(playerMaxHP, playerHP + heal);
-                logBattle(`Je herstelt ${heal} HP.`);
+                logBattle(`Je herstelt ${heal} HP.`, 'text-pink-400');
             }
 
             isPlayerTurn = false;
@@ -898,11 +995,24 @@
             if(enemyHP <= 0) {
                 enemyHP = 0;
                 updateBattleUI();
-                logBattle(`Je hebt ${enemies[currentEnemyLevel].name} verslagen!`, 'text-green-400 font-bold');
-                setTimeout(nextLevel, 1500);
+                
+                monstersDefeated++;
+                updateMonsterScore();
+                
+                logBattle(`Je hebt de vijand verslagen!`, 'text-green-400 font-bold');
+                
+                enemyIndex++;
+                if (enemyIndex >= enemies.length) {
+                    enemyIndex = 0;
+                    currentStage++;
+                    setTimeout(() => logBattle(`⚠️ ZONE LEVEL STIJGT NAAR ${currentStage}! Vijanden worden sterker.`, 'text-purple-400 font-bold mt-2'), 500);
+                }
+                
+                setTimeout(spawnEnemy, 2000);
             } else {
-                document.getElementById('turnIndicator').innerText = "Vijand's Beurt...";
-                document.getElementById('turnIndicator').className = "bg-red-600/20 text-red-400 border border-red-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner";
+                const turnInd = document.getElementById('turnIndicator');
+                turnInd.innerText = "Vijand's Beurt...";
+                turnInd.className = "bg-red-600/20 text-red-400 border border-red-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner transition-colors";
                 setTimeout(enemyTurn, 1000);
             }
         }
@@ -910,8 +1020,8 @@
         function enemyTurn() {
             if(enemyHP <= 0) return;
             
-            const e = enemies[currentEnemyLevel];
-            let dmg = Math.floor(Math.random() * 5) + e.atk; // Base atk + rand(0-4)
+            const e = enemies[enemyIndex];
+            let dmg = Math.floor(Math.random() * 5) + currentEnemyAtk;
 
             if(playerShield > 0) {
                 logBattle(`${e.name} valt aan, maar je schild blokkeert de schade!`, 'text-amber-300');
@@ -926,44 +1036,26 @@
                 updateBattleUI();
                 logBattle("Je bent verslagen! Game Over.", "text-red-500 font-bold");
                 setTimeout(() => {
-                    alert("Game Over! Laten we het opnieuw proberen.");
+                    alert(`Game Over! Je hebt ${monstersDefeated} monsters verslagen. Laten we het opnieuw proberen!`);
                     initRPG();
                 }, 2000);
                 return;
             }
 
             isPlayerTurn = true;
-            document.getElementById('turnIndicator').innerText = "Jouw Beurt!";
-            document.getElementById('turnIndicator').className = "bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner";
+            const turnInd = document.getElementById('turnIndicator');
+            turnInd.innerText = "Jouw Beurt!";
+            turnInd.className = "bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-sm font-bold shadow-inner transition-colors";
             updateBattleUI();
         }
 
-        function nextLevel() {
-            currentEnemyLevel++;
-            if(currentEnemyLevel >= enemies.length) {
-                logBattle("Gefeliciteerd! Je hebt alle monsters verslagen!", "text-amber-400 font-bold");
-                setTimeout(() => {
-                    alert("Je hebt het bos gezuiverd! Als beloning krijg je 50 punten!");
-                    updateScore(50);
-                    navigate('home'); // Return home on win
-                }, 2000);
-                return;
-            }
-            logBattle(`--- BOS ZONE LEVEL ${currentEnemyLevel + 1} ---`, 'text-amber-500 font-bold mt-4');
-            spawnEnemy();
-        }
-
         function updateBattleUI() {
-            // Player stats
             document.getElementById('playerHpText').innerText = `${playerHP}/${playerMaxHP}`;
             document.getElementById('playerHpBar').style.width = `${(playerHP/playerMaxHP)*100}%`;
             
-            // Enemy stats
-            const e = enemies[currentEnemyLevel];
-            document.getElementById('enemyHpText').innerText = `${enemyHP}/${e.maxHp}`;
-            document.getElementById('enemyHpBar').style.width = `${(enemyHP/e.maxHp)*100}%`;
+            document.getElementById('enemyHpText').innerText = `${enemyHP}/${enemyMaxHP}`;
+            document.getElementById('enemyHpBar').style.width = `${(enemyHP/enemyMaxHP)*100}%`;
 
-            // Disable buttons if not player turn
             const btns = document.querySelectorAll('.battle-btn');
             btns.forEach(btn => {
                 btn.disabled = !isPlayerTurn;
@@ -972,8 +1064,9 @@
 
         function logBattle(msg, colorClass = "text-green-400") {
             const logBox = document.getElementById('battleLog');
+            if(!logBox) return;
             const entry = document.createElement('div');
-            entry.className = `${colorClass} mb-1`;
+            entry.className = `${colorClass} mb-1.5`;
             entry.innerText = `> ${msg}`;
             logBox.appendChild(entry);
             logBox.scrollTop = logBox.scrollHeight;
